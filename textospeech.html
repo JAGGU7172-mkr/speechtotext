@@ -1,26 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speech to Text Project</title>
-    <!-- Link to external CSS file -->
-    <link rel="stylesheet" href="styleoftext.css">
+  <meta charset="UTF-8">
+  <title>Speech to Text Demo</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f6f8fa;
+    }
+    h1 {
+      margin-top: 30px;
+      color: #333;
+    }
+    #result {
+      width: 80vw;
+      min-height: 120px;
+      margin: 20px;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      font-size: 1.2rem;
+      color: #222;
+      transition: box-shadow 0.2s;
+    }
+    button {
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      margin: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:active {
+      background: #2563eb;
+    }
+    #status {
+      color: #444;
+      margin: 10px;
+      min-height: 24px;
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
-    <h1>Speech to Text</h1>
-    <p>Click the "Start" button and begin speaking. Your speech will appear here.</p>
-    
-    <div class="controls">
-        <button id="startButton">Start</button>
-        <button id="stopButton" disabled>Stop</button>
-    </div>
+  <h1>Speech to Text Demo</h1>
 
-    <div class="output">
-        <p id="transcription">Your transcribed speech will appear here...</p>
-    </div>
+  <div id="result" contenteditable="false"></div>
+  <div id="status"></div>
+  <button id="startBtn">Start Listening</button>
+  <button id="stopBtn" disabled>Stop Listening</button>
+  <button id="clearBtn">Clear Text</button>
 
-    <!-- Link to external JavaScript file -->
-    <script src="scriptoftext.js"></script>
+  <script>
+    // Check browser support
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!window.SpeechRecognition) {
+      document.getElementById('status').textContent = 'Sorry, your browser does not support Speech Recognition.';
+      document.getElementById('startBtn').disabled = true;
+    } else {
+      const recognition = new window.SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      const resultDiv = document.getElementById('result');
+      const statusDiv = document.getElementById('status');
+      let isListening = false;
+
+      recognition.onstart = () => {
+        statusDiv.textContent = 'Listening... Please speak.';
+        isListening = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').disabled = false;
+      };
+      recognition.onend = () => {
+        statusDiv.textContent = 'Stopped listening.';
+        isListening = false;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+      };
+      recognition.onerror = (event) => {
+        statusDiv.textContent = 'Error: ' + event.error;
+        isListening = false;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+      };
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        resultDiv.textContent = transcript;
+      };
+
+      document.getElementById('startBtn').onclick = () => {
+        if (!isListening) recognition.start();
+      };
+      document.getElementById('stopBtn').onclick = () => {
+        if (isListening) recognition.stop();
+      };
+      document.getElementById('clearBtn').onclick = () => {
+        resultDiv.textContent = '';
+      };
+    }
+  </script>
 </body>
 </html>
